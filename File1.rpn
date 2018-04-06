@@ -1,3 +1,4 @@
 LET A 1
 LET B 2
+LET C A 2 *
 PRINT A B +
