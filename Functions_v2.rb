@@ -1,9 +1,9 @@
 class RPN
-  attr_accessor :operands, :variables, :line_num
+  attr_accessor :operands, :variables, :line_num, :result
   def initialize
     @keywords = ['LET', 'PRINT', 'QUIT']
-    @operators = ['+', '-', '*', '/']
     @operands = []
+    @result = 0
     @variables = {}
     @line_num = 0
   end
@@ -22,7 +22,6 @@ class RPN
 
   def evaluate tokens
     tokens.each do |t|
-      puts "Evaluating #{t}..."
       case t
         when /\d/
           @operands.push(t.to_f)
@@ -31,16 +30,24 @@ class RPN
             operands = @operands.pop(2)
           else
             puts "Line #{@line_num}: Operator #{t} applied to empty stack"
-            next
+            break
           end
           begin
           	@operands.push(operands[0].send(t.to_s, operands[1]))
           rescue
           	puts "Line #{@line_num}: Unknown operator #{t}"
+          	break
           end
       end
     end
-    nil
+    
+    if @operands.length =~ 1
+      puts "Line #{@line_num}: Stack not empty"
+      @result = nil
+    else
+      @result = @operands[0]
+    end
+    @operands = []
   end
 
   def execute_keywords(tokens, keyword)
@@ -49,7 +56,7 @@ class RPN
         let(tokens)
       when 'PRINT'
         evaluate tokens
-        puts @operands[0]
+        puts @result
       when 'QUIT'
         do_quit(tokens)
       else
@@ -60,12 +67,13 @@ class RPN
   def let(tokens)
     if tokens.length < 1
       puts "Line #{@line_num}: Variable name missing"
-    elsif tokens.length > 1 && tokens.length < 3 
-    	
+    elsif tokens.length == 1
+      puts "Line #{@line_num}: Value missing"
     elsif not ('A'..'Z').to_a.include? tokens[0].upcase
       puts "Line #{@line_num}: Invalid variable name"
     else
-      @variables[tokens[0].upcase] = evaluate tokens.drop(1)
+      evaluate tokens.drop(1)
+      @variables[tokens[0].upcase] = @result
     end
 
   end
@@ -73,5 +81,6 @@ class RPN
   def do_quit(tokens)
     if tokens.length > 0
       puts "Line #{@line_num}: Redundant trailing values"
+    end
   end
 end
