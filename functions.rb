@@ -98,7 +98,7 @@ after evaluation"
     @error = let_err_check tokens, @line_num
     return @error['val'] if @error['bool']
     compute_lines tokens.drop(1)
-    @variables[tokens[0].upcase] = @result unless @result.nil?
+    @variables[tokens[0].upcase] = @result.to_f unless @result.nil?
   end
 
   def format_result(result)
