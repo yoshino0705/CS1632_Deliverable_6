@@ -1,16 +1,30 @@
-require_relative 'functions'
-# Execution starts here
+require_relative 'Functions_v2'
 
-# TODO: concatenate files if more than one command line argument
-# 		REPL mode
-functions = Functions.new()
-if ARGV.none?
-	# parse user input from command line
-	while(1)
+if ARGV.none?	
+	rpn = RPN.new 'REPL'
+	while true
 		print "> "
-		functions.compute_line(gets)
+		rpn.calculate gets
+		rpn.line_num += 1
 	end
 else
-	functions.parse_text_file(ARGV[0])
-	# parse_text_file
+	rpn = RPN.new 'FILE'
+	ARGV.each do |path|
+		#puts "doing #{path}"
+	    if not File.exist? path
+	    	puts "#{path} does not exist"
+	    	exit
+	    end
+	    rpn.line_num = 1
+	    File.readlines(path).each do |line|
+	    	err = rpn.calculate line
+	    	if rpn.error
+	    		puts "exited with code #{err}"
+	    		exit err
+	    	end
+
+	    	rpn.line_num += 1
+	    end
+		
+	end
 end
