@@ -1,4 +1,4 @@
-require_relative 'Functions_v2'
+require_relative 'functions'
 
 if ARGV.none?	
 	rpn = RPN.new 'REPL'
