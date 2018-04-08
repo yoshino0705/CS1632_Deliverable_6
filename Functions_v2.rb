@@ -12,8 +12,9 @@ class RPN
     tokens = expression.split
     if tokens.length < 1
       puts "Line #{@line_num}: Expression too short"
+      return
     end
-    if @keywords.include? tokens[0].upcase
+    if (string? tokens[0]) && (not alphabetical? tokens[0])
       execute_keywords(tokens.drop(1), tokens[0].upcase)
     else
       evaluate tokens
@@ -21,33 +22,43 @@ class RPN
   end
 
   def evaluate tokens
+  	@operands = []
     tokens.each do |t|
       case t
         when /\d/
-          @operands.push(t.to_f)
+          @operands.push(t.to_f)          
+
         else
-          if @operands.length >= 2
+          if [*'a'..'z', *'A'..'Z'].include? t
+          	if @variables.keys.include? t.upcase
+              @operands.push(@variables[t.upcase])
+            else
+          	  puts "Line #{@line_num}: Variable #{t} is not initialized"
+          	  return
+            end
+
+          elsif @operands.length >= 2
             operands = @operands.pop(2)
+            begin
+          	  @operands.push(operands[0].send(t.to_s, operands[1]))
+            rescue
+          	  puts "Line #{@line_num}: Could not evaluate expression"
+          	  return
+            end
           else
             puts "Line #{@line_num}: Operator #{t} applied to empty stack"
-            break
-          end
-          begin
-          	@operands.push(operands[0].send(t.to_s, operands[1]))
-          rescue
-          	puts "Line #{@line_num}: Unknown operator #{t}"
-          	break
+            return
           end
       end
     end
-    
-    if @operands.length =~ 1
-      puts "Line #{@line_num}: Stack not empty"
-      @result = nil
+
+    if @operands.length == 1
+      @result = @operands[0]      
+      puts @result
     else
-      @result = @operands[0]
+      puts "Line #{@line_num}: #{@operands.length} elements in stack after evaluation"
+      @result = nil
     end
-    @operands = []
   end
 
   def execute_keywords(tokens, keyword)
@@ -56,11 +67,11 @@ class RPN
         let(tokens)
       when 'PRINT'
         evaluate tokens
-        puts @result
+        #puts @result
       when 'QUIT'
-        do_quit(tokens)
+        exit
       else
-      	puts "Line #{@line_num}: Unknown keyword"
+      	puts "Line #{@line_num}: Unknown keyword #{keyword}"
     end
   end
 
@@ -69,7 +80,7 @@ class RPN
       puts "Line #{@line_num}: Variable name missing"
     elsif tokens.length == 1
       puts "Line #{@line_num}: Value missing"
-    elsif not ('A'..'Z').to_a.include? tokens[0].upcase
+    elsif not alphabetical? tokens[0].upcase
       puts "Line #{@line_num}: Invalid variable name"
     else
       evaluate tokens.drop(1)
@@ -78,9 +89,11 @@ class RPN
 
   end
 
-  def do_quit(tokens)
-    if tokens.length > 0
-      puts "Line #{@line_num}: Redundant trailing values"
-    end
+  def alphabetical? s
+    ('A'..'Z').to_a.include? s.upcase
+  end
+
+  def string? s
+  	s.to_i.to_s != s
   end
 end
