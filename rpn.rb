@@ -11,6 +11,7 @@ if ARGV.none?
     print '> '
     rpn.calculate gets
     rpn.line_num += 1
+    rpn.error['bool'] = false
   end
 else
   rpn = RPN.new 'FILE'

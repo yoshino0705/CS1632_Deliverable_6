@@ -23,21 +23,25 @@ class RPN
     end
     return execute_keywords(tokens.drop(1), tokens[0].upcase)\
     if (string? tokens[0]) && (!alphabetical? tokens[0])
-    @operands = []
     compute_lines tokens
   end
 
   def compute_lines(tokens)
+    @operands = []
     tokens.each do |t|
-      case t
-      when /\d/
-        @operands.push(t.to_f)
-      else
-        handle_other_values t
-        return @error['val'] if @error['bool']
-      end
+      handle_token t
+      return @error['val'] if @error['bool']
     end
-    update_result
+    update_result # updates as well as printing the result if in repl mode
+  end
+
+  def handle_token(token)
+    case token
+    when /\d/
+      @operands.push(token.to_f)
+    else
+      handle_other_values token
+    end
   end
 
   def handle_other_values(token)
@@ -69,7 +73,7 @@ class RPN
   def update_result
     if @operands.length == 1
       format_result @operands[0]
-      puts @result if @mode.casecmp('REPL').zero?
+      puts @result if @mode.casecmp('REPL').zero? && !@error['bool']
     else
       puts "Line #{@line_num}: #{@operands.length} elements in stack \
 after evaluation"

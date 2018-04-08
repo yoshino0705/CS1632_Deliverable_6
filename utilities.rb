@@ -14,7 +14,7 @@ end
 def let_err_check(tokens, line_num)
   if tokens.empty?
     puts "Line #{line_num}: Variable name missing"
-    { 'bool' => true, 'val' => 5 }
+    return { 'bool' => true, 'val' => 5 }
   end
   let_syntax_err_check tokens, line_num
 end
@@ -23,10 +23,10 @@ def let_syntax_err_check(tokens, line_num)
   alpha = alphabetical? tokens[0].upcase
   if tokens.length == 1 && alpha
     puts "Line #{line_num}: Value missing"
-    { 'bool' => true, 'val' => 5 }
+    return { 'bool' => true, 'val' => 5 }
   elsif !alpha
     puts "Line #{line_num}: Invalid variable name"
-    { 'bool' => true, 'val' => 5 }
+    return { 'bool' => true, 'val' => 5 }
   end
   { 'bool' => false, 'val' => 0 }
 end
