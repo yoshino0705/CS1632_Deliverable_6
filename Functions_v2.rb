@@ -1,7 +1,7 @@
 class RPN
   attr_accessor :mode, :variables, :line_num, :result
   def initialize
-  	@mode = 'REPL'
+    @mode = 'REPL'
     @operands = []
     @result = 0
     @variables = {}
