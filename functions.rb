@@ -1,131 +1,105 @@
+# CS1632 Deliverable 6
+# Wei-Hao Chen
+# Nick Sallinger
+# a class designed to evaluate RPN++
+require_relative 'utilities'
+
 class RPN
   attr_accessor :variables, :line_num, :result, :error
-  def initialize mode='REPL'
-  	@mode = mode
-  	@error = false
-  	@operands = []
+  def initialize(mode = 'REPL')
+    @mode = mode
+    @error = { 'bool' => false, 'val' => 0 }
+    @operands = []
     @result = 0
     @variables = {}
     @line_num = 1
   end
 
-  def calculate expression
+  def calculate(expression)
     tokens = expression.split
-    if tokens.length < 1
-      #puts "Line #{@line_num}: Expression too short"
+    if tokens.empty?
       # blank lines should be ignored
       return 0
     end
-    if (string? tokens[0]) && (not alphabetical? tokens[0])
-      return execute_keywords(tokens.drop(1), tokens[0].upcase)
+    return execute_keywords(tokens.drop(1), tokens[0].upcase)\
+    if (string? tokens[0]) && (!alphabetical? tokens[0])
+    @operands = []
+    compute_lines tokens
+  end
+
+  def compute_lines(tokens)
+    tokens.each do |t|
+      case t
+      when /\d/
+        @operands.push(t.to_f)
+      else
+        handle_other_values t
+        return @error['val'] if @error['bool']
+      end
+    end
+    update_result
+  end
+
+  def handle_other_values(token)
+    if alphabetical? token
+      if @variables.keys.include? token.upcase
+        @operands.push(@variables[token.upcase])
+      else
+        puts "Line #{@line_num}: Variable #{token} is not initialized"
+        @error = { 'bool' => true, 'val' => 1 }
+      end
+    elsif @operands.length >= 2
+      if not_operator? token
+        puts "Line #{@line_num}: Unknown operator #{token}"
+        @error = { 'bool' => true, 'val' => 5 }
+      end
+      operands = @operands.pop(2)
+      begin
+        @operands.push(operands[0].send(token.to_s, operands[1]))
+      rescue NoMethodError
+        puts "Line #{@line_num}: Could not evaluate expression"
+        @error = { 'bool' => true, 'val' => 5 }
+      end
     else
-      return evaluate tokens
+      puts "Line #{@line_num}: Operator #{token} applied to empty stack"
+      @error = { 'bool' => true, 'val' => 2 }
     end
   end
 
-  def evaluate tokens
-  	@operands = []
-    tokens.each do |t|
-      case t
-        when /\d/
-          @operands.push(t.to_f)          
-
-        else
-          if alphabetical? t
-          	if @variables.keys.include? t.upcase
-              @operands.push(@variables[t.upcase])
-            else
-          	  puts "Line #{@line_num}: Variable #{t} is not initialized"
-          	  @error = true
-          	  return 1
-            end
-
-          elsif @operands.length >= 2
-            operands = @operands.pop(2)
-            begin
-          	  @operands.push(operands[0].send(t.to_s, operands[1]))
-            rescue
-          	  puts "Line #{@line_num}: Could not evaluate expression"
-          	  @error = true
-          	  return 5
-            end
-          else
-            puts "Line #{@line_num}: Operator #{t} applied to empty stack"
-            @error = true
-          	return 2
-          end
-      end
-    end
+  def update_result
     if @operands.length == 1
-      set_result @operands[0]
-      if @mode.upcase == 'REPL'
-        puts @result
-      end
+      format_result @operands[0]
+      puts @result if @mode.casecmp('REPL').zero?
     else
-      puts "Line #{@line_num}: #{@operands.length} elements in stack after evaluation"
-      @error = true
-      return 3
+      puts "Line #{@line_num}: #{@operands.length} elements in stack \
+after evaluation"
+      @error = { 'bool' => true, 'val' => 3 }
     end
   end
 
   def execute_keywords(tokens, keyword)
-    case keyword 
-      when 'LET'
-        let(tokens)
-      when 'PRINT'
-        evaluate tokens
-        if @mode.upcase != 'REPL' and not @error
-          puts @result
-        end
-      when 'QUIT'
-        exit
-      else
-      	puts "Line #{@line_num}: Unknown keyword #{keyword}"
-      	@error = true
-      	return 4
+    exit if keyword.casecmp('QUIT').zero?
+    if keyword.casecmp('LET').zero?
+      let tokens
+    elsif keyword.casecmp('PRINT').zero?
+      compute_lines tokens
+      puts @result if !@mode.casecmp('REPL').zero? && !@error['bool']
+    else
+      puts "Line #{@line_num}: Unknown keyword #{keyword}"
+      @error = { 'bool' => true, 'val' => 4 }
     end
   end
 
   def let(tokens)
-    if tokens.length < 1
-      puts "Line #{@line_num}: Variable name missing"
-      @error = true
-      return 5
-    elsif tokens.length == 1 and alphabetical? tokens[0].upcase
-      puts "Line #{@line_num}: Invalid variable name"
-      @error = true
-      return 5
-    elsif tokens.length == 1
-      puts "Line #{@line_num}: Value missing"
-      @error = true
-      return 5
-    elsif not alphabetical? tokens[0].upcase
-      puts "Line #{@line_num}: Invalid variable name"
-      @error = true
-      return 5
-    else
-      evaluate tokens.drop(1)
-      if not @result.nil?
-        @variables[tokens[0].upcase] = @result
-      end
-    end
-
+    @error = let_err_check tokens, @line_num
+    return @error['val'] if @error['bool']
+    compute_lines tokens.drop(1)
+    @variables[tokens[0].upcase] = @result unless @result.nil?
   end
 
-  def alphabetical? s
-    ('A'..'Z').to_a.include? s.upcase
-  end
-
-  def string? s
-  	s.to_i.to_s != s
-  end
-
-  def set_result result
-  	if result.to_i == result.to_f
-  	  @result = result.to_i
-  	else
-  	  @result = result.to_f
-  	end
-    nil
+  def format_result(result)
+    same = result.to_i == result.to_f
+    @result = result.to_f
+    @result = result.to_i if same
   end
 end
