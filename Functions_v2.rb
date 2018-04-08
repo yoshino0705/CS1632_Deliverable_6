@@ -63,7 +63,6 @@ class RPN
       end
     else
       puts "Line #{@line_num}: #{@operands.length} elements in stack after evaluation"
-      set_result nil
       @error = true
       return 3
     end
@@ -75,7 +74,7 @@ class RPN
         let(tokens)
       when 'PRINT'
         evaluate tokens
-        if @mode.upcase != 'REPL'
+        if @mode.upcase != 'REPL' and not @error
           puts @result
         end
       when 'QUIT'
@@ -90,6 +89,10 @@ class RPN
   def let(tokens)
     if tokens.length < 1
       puts "Line #{@line_num}: Variable name missing"
+      @error = true
+      return 5
+    elsif tokens.length == 1 and alphabetical? tokens[0].upcase
+      puts "Line #{@line_num}: Invalid variable name"
       @error = true
       return 5
     elsif tokens.length == 1
@@ -123,5 +126,6 @@ class RPN
   	else
   	  @result = result.to_f
   	end
+    nil
   end
 end
