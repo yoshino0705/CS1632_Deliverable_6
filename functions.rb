@@ -5,7 +5,7 @@
 require_relative 'utilities'
 
 class RPN
-  attr_accessor :variables, :line_num, :result, :error
+  attr_accessor :variables, :line_num, :result, :error, :operands
   def initialize(mode = 'REPL')
     @mode = mode
     @error = { 'bool' => false, 'val' => 0 }
@@ -73,7 +73,7 @@ class RPN
   def update_result
     if @operands.length == 1
       format_result @operands[0]
-      puts @result if @mode.casecmp('REPL').zero? && !@error['bool']
+      puts @result.to_i if @mode.casecmp('REPL').zero? && !@error['bool']
     else
       puts "Line #{@line_num}: #{@operands.length} elements in stack \
 after evaluation"
@@ -87,16 +87,21 @@ after evaluation"
       let tokens
     elsif keyword.casecmp('PRINT').zero?
       compute_lines tokens
-      puts @result if !@mode.casecmp('REPL').zero? && !@error['bool']
+      puts @result.to_i if print_in_file_mode?
     else
       puts "Line #{@line_num}: Unknown keyword #{keyword}"
       @error = { 'bool' => true, 'val' => 4 }
     end
   end
 
+  def print_in_file_mode?
+    !@mode.casecmp('REPL').zero? && !@error['bool']
+  end
+
   def let(tokens)
     @error = let_err_check tokens, @line_num
     return @error['val'] if @error['bool']
+    # disregard the variable name and compute the expression
     compute_lines tokens.drop(1)
     @variables[tokens[0].upcase] = @result.to_f unless @result.nil?
   end

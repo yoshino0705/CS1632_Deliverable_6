@@ -25,7 +25,7 @@ def let_syntax_err_check(tokens, line_num)
     puts "Line #{line_num}: Value missing"
     return { 'bool' => true, 'val' => 5 }
   elsif !alpha
-    puts "Line #{line_num}: Invalid variable name"
+    puts "Line #{line_num}: Invalid variable name #{tokens[0]}"
     return { 'bool' => true, 'val' => 5 }
   end
   { 'bool' => false, 'val' => 0 }
