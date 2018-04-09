@@ -1,9 +1,8 @@
+require_relative 'utilities'
 # CS1632 Deliverable 6
 # Wei-Hao Chen
 # Nick Sallinger
 # a class designed to evaluate RPN++
-require_relative 'utilities'
-
 class RPN
   attr_accessor :variables, :line_num, :result, :error, :operands
   def initialize(mode = 'REPL')
@@ -38,7 +37,7 @@ class RPN
   def handle_token(token)
     case token
     when /\d/
-      @operands.push(token.to_f)
+      @operands.push(token.to_i)
     else
       handle_other_values token
     end
@@ -47,7 +46,7 @@ class RPN
   def handle_other_values(token)
     if alphabetical? token
       if @variables.keys.include? token.upcase
-        @operands.push(@variables[token.upcase])
+        @operands.push(@variables[token.upcase].to_i)
       else
         puts "Line #{@line_num}: Variable #{token} is not initialized"
         @error = { 'bool' => true, 'val' => 1 }
@@ -63,6 +62,9 @@ class RPN
       rescue NoMethodError
         puts "Line #{@line_num}: Could not evaluate expression"
         @error = { 'bool' => true, 'val' => 5 }
+      rescue ZeroDivisionError
+        puts "Line #{@line_num}: Divided by zero"
+        @error = { 'bool' => true, 'val' => 5 }
       end
     else
       puts "Line #{@line_num}: Operator #{token} applied to empty stack"
@@ -72,7 +74,7 @@ class RPN
 
   def update_result
     if @operands.length == 1
-      format_result @operands[0]
+      @result = @operands[0].to_i
       puts @result.to_i if @mode.casecmp('REPL').zero? && !@error['bool']
     else
       puts "Line #{@line_num}: #{@operands.length} elements in stack \
@@ -103,12 +105,6 @@ after evaluation"
     return @error['val'] if @error['bool']
     # disregard the variable name and compute the expression
     compute_lines tokens.drop(1)
-    @variables[tokens[0].upcase] = @result.to_f unless @result.nil?
-  end
-
-  def format_result(result)
-    same = result.to_i == result.to_f
-    @result = result.to_f
-    @result = result.to_i if same
+    @variables[tokens[0].upcase] = @result.to_i unless @result.nil?
   end
 end
