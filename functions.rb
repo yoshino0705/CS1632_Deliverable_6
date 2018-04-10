@@ -102,6 +102,7 @@ after evaluation"
     return @error['val'] if @error['bool']
     # disregard the variable name and compute the expression
     compute_lines tokens.drop(1)
-    @variables[tokens[0].upcase] = @result.to_i unless @result.nil? || @error['bool']
+    @variables[tokens[0].upcase] = @result.to_i\
+    unless @result.nil? || @error['bool']
   end
 end
