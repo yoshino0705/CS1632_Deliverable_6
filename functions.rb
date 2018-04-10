@@ -59,9 +59,6 @@ class RPN
       operands = @operands.pop(2)
       begin
         @operands.push(operands[0].send(token.to_s, operands[1]))
-      rescue NoMethodError
-        puts "Line #{@line_num}: Could not evaluate expression"
-        @error = { 'bool' => true, 'val' => 5 }
       rescue ZeroDivisionError
         puts "Line #{@line_num}: Divided by zero"
         @error = { 'bool' => true, 'val' => 5 }
@@ -105,6 +102,6 @@ after evaluation"
     return @error['val'] if @error['bool']
     # disregard the variable name and compute the expression
     compute_lines tokens.drop(1)
-    @variables[tokens[0].upcase] = @result.to_i unless @result.nil?
+    @variables[tokens[0].upcase] = @result.to_i unless @result.nil? || @error['bool']
   end
 end

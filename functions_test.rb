@@ -26,7 +26,7 @@ class RPN_test < Minitest::Test
     @rpn_repl.operands = []
     syntax = 'p chan'.split
     @rpn_repl.let syntax
-    assert_equal @rpn_repl.variables['P'], nil.to_f
+    assert_equal @rpn_repl.variables['P'], nil
     assert_equal @rpn_repl.error['bool'], true
   end
 
