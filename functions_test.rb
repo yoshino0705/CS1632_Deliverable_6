@@ -227,4 +227,23 @@ class RPN_test < Minitest::Test
     assert_equal (not_operator? '*'), false
   end
 
+  # This tests that variables are case insensitive
+  def test_variable_case_sensitivity
+    syntax1 = 'A 1234'.split
+    rtrn1 = @rpn_repl.let(syntax1)
+    syntax2 = 'a 1234'.split
+    rtrn2 = @rpn_repl.let(syntax2)
+    assert_equal(rtrn2,rtrn1)
+  end
+
+  def test_keyword_case_insensitivity
+    @rpn_repl.error['bool'] = false
+    @rpn_repl.operands = []
+    syntax1 = 'PRiNt 2 2 *'.split
+    syntax2 = 'print 2 2 *'.split
+    return1 = @rpn_repl.execute_keywords syntax1.drop(1), syntax1[0]
+    return2 = @rpn_repl.execute_keywords syntax2.drop(1), syntax2[0]
+    assert_equal(return1,return2)
+  end
+
 end
